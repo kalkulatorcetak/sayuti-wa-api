@@ -5,6 +5,7 @@ const socketIO = require('socket.io');
 const qrcode = require('qrcode');
 const http = require('http');
 const fs = require('fs');
+const cors = require('cors');
 
 const { phoneNumberFormatter } = require('./helpers/formatter');
 const fileUpload = require('express-fileupload');
@@ -14,7 +15,7 @@ const port = process.env.PORT || 8000;
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
-
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({
   extended: true
@@ -29,7 +30,7 @@ if (fs.existsSync(SESSION_FILE_PATH)) {
   sessionCfg = require(SESSION_FILE_PATH);
 }
 
-app.get('/', (req, res) => {
+app.get('/qr_code_baca/', (req, res) => {
   res.sendFile('index.html', {
     root: __dirname
   });
@@ -127,7 +128,13 @@ const checkRegisteredNumber = async function(number) {
   const isRegistered = await client.isRegisteredUser(number);
   return isRegistered;
 }
-
+//index
+app.get('/', function (req, res) {
+  return res.status(422).json({
+      status: false,
+      message: 'Belum siap bro'
+    });
+})
 // Send message
 app.post('/send-message', [
   body('number').notEmpty(),
