@@ -130,10 +130,9 @@ const checkRegisteredNumber = async function(number) {
 }
 //index
 app.get('/', function (req, res) {
-  return res.status(422).json({
-      status: false,
-      message: 'Belum siap bro'
-    });
+  res.sendFile('main.html', {
+    root: __dirname
+  });
 })
 // Send message
 app.post('/send-message', [
