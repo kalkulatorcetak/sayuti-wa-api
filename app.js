@@ -10,7 +10,7 @@ const cors = require('cors');
 const { phoneNumberFormatter } = require('./helpers/formatter');
 const fileUpload = require('express-fileupload');
 const axios = require('axios');
-const port = process.env.PORT || 8000;
+const port = process.env.PORT || 8002;
 
 const app = express();
 const server = http.createServer(app);
@@ -32,6 +32,11 @@ if (fs.existsSync(SESSION_FILE_PATH)) {
 
 app.get('/qr_code_baca/', (req, res) => {
   res.sendFile('index.html', {
+    root: __dirname
+  });
+});
+app.get('/loading', (req, res) => {
+  res.sendFile('loading.gif', {
     root: __dirname
   });
 });
@@ -81,24 +86,24 @@ client.initialize();
 
 // Socket IO
 io.on('connection', function(socket) {
-  socket.emit('message', 'Connecting...');
+  socket.emit('message', 'Menghubungkan...');
 
   client.on('qr', (qr) => {
-    console.log('QR RECEIVED', qr);
+    console.log('QR DITERIMA', qr);
     qrcode.toDataURL(qr, (err, url) => {
       socket.emit('qr', url);
-      socket.emit('message', 'QR Code received, scan please!');
+      socket.emit('message', 'Kode QR diterima, harap pindai!');
     });
   });
 
   client.on('ready', () => {
-    socket.emit('ready', 'Whatsapp is ready!');
-    socket.emit('message', 'Whatsapp is ready!');
+    socket.emit('ready', 'Whatsapp sudah siap!');
+    socket.emit('message', 'Whatsapp sudah siap!');
   });
 
   client.on('authenticated', (session) => {
-    socket.emit('authenticated', 'Whatsapp is authenticated!');
-    socket.emit('message', 'Whatsapp is authenticated!');
+    socket.emit('authenticated', 'Whatsapp diautentikasi!');
+    socket.emit('message', 'Whatsapp diautentikasi!');
     console.log('AUTHENTICATED', session);
     sessionCfg = session;
     fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), function(err) {
@@ -109,11 +114,11 @@ io.on('connection', function(socket) {
   });
 
   client.on('auth_failure', function(session) {
-    socket.emit('message', 'Auth failure, restarting...');
+    socket.emit('message', 'Kegagalan otorisasi, memulai ulang...');
   });
 
   client.on('disconnected', (reason) => {
-    socket.emit('message', 'Whatsapp is disconnected!');
+    socket.emit('message', 'Whatsapp terputus!');
     fs.unlinkSync(SESSION_FILE_PATH, function(err) {
         if(err) return console.log(err);
         console.log('Session file deleted!');
@@ -219,7 +224,42 @@ const findGroupByName = async function(name) {
   });
   return group;
 }
+app.get('/getcontacts', (req,res) => {
+    client.getContacts().then((contacts) => {
+        res.send(JSON.stringify(contacts));
+    });
+});
 
+app.get('/getcontact/:phone', async (req,res) => {
+    let phone = req.params.phone;
+    if(phone!=undefined){
+        client.getContactById(phone+'@c.us').then((contact) => {
+            res.send(JSON.stringify(contact));
+        }).catch((err) => {
+            res.send({status:'error',message:'Not found'});
+        });
+    }
+});
+app.get('/getchatbyid/:phone', async (req,res) => {
+    let phone = req.params.phone;
+    if(phone==undefined){
+        res.send({status:"error",message:"please enter valid phone number"});
+    }else{
+        client.getChatById(phone+"@c.us").then((chat) => {
+            res.send({ status:"success", message: chat});
+        }).catch(() => {
+            console.error("getchaterror")
+            res.send({status:"error",message:"getchaterror"})
+        })
+    }
+});
+app.get('/getchats', async (req,res) => {
+    client.getChats().then((chats) => {
+        res.send({ status:"success", message: chats});
+    }).catch(() => {
+        res.send({status:"error",message:"getchatserror"})
+    })
+});
 // Send message to group
 // You can use chatID or group name, yea!
 app.post('/send-group-message', [

@@ -18,13 +18,19 @@ app.use(express.urlencoded({
 }));
 
 app.get('/', (req, res) => {
-  res.sendFile('index-multiple-device.html', {
+  res.sendFile('index-multi.html', {
+    root: __dirname
+  });
+});
+
+app.get('/kirim', (req, res) => {
+  res.sendFile('kirim.html', {
     root: __dirname
   });
 });
 
 const sessions = [];
-const SESSIONS_FILE = './whatsapp-sessions.json';
+const SESSIONS_FILE = './whatsapp-sessions-multi.json';
 
 const createSessionsFileIfNotExists = function() {
   if (!fs.existsSync(SESSIONS_FILE)) {
