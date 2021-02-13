@@ -10,7 +10,7 @@ const cors = require('cors');
 const { phoneNumberFormatter } = require('./helpers/formatter');
 const fileUpload = require('express-fileupload');
 const axios = require('axios');
-const port = process.env.PORT || 8002;
+const port = process.env.PORT || 8000;
 
 const app = express();
 const server = http.createServer(app);
